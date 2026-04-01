@@ -12,28 +12,34 @@
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Pin actionlint release used by curl install in lint-actions workflow",
+      "description": "Pin actionlint git tag + commit SHA (github-tags); inline # v… comment is required for Renovate semver + digest updates",
       "managerFilePatterns": ["/^\\.github/workflows/lint-actions\\.ya?ml$/"],
-      "matchStrings": ["ACTIONLINT_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
-      "datasourceTemplate": "github-releases",
+      "matchStrings": [
+        "ACTIONLINT_COMMIT:\\s+(?<currentDigest>[a-f0-9]{40})\\s*#\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "github-tags",
       "depNameTemplate": "rhysd/actionlint",
       "versioningTemplate": "semver"
     },
     {
       "customType": "regex",
-      "description": "Pin ghalint release used by curl install in lint-actions workflow",
+      "description": "Pin ghalint git tag + commit SHA (github-tags); inline # v… comment is required for Renovate semver + digest updates",
       "managerFilePatterns": ["/^\\.github/workflows/lint-actions\\.ya?ml$/"],
-      "matchStrings": ["GHALINT_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
-      "datasourceTemplate": "github-releases",
+      "matchStrings": [
+        "GHALINT_COMMIT:\\s+(?<currentDigest>[a-f0-9]{40})\\s*#\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "github-tags",
       "depNameTemplate": "suzuki-shunsuke/ghalint",
       "versioningTemplate": "semver"
     },
     {
       "customType": "regex",
-      "description": "Pin zizmor release used by curl install in lint-actions workflow",
+      "description": "Pin zizmor git tag + commit SHA (github-tags); inline # v… comment is required for Renovate semver + digest updates",
       "managerFilePatterns": ["/^\\.github/workflows/lint-actions\\.ya?ml$/"],
-      "matchStrings": ["ZIZMOR_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
-      "datasourceTemplate": "github-releases",
+      "matchStrings": [
+        "ZIZMOR_COMMIT:\\s+(?<currentDigest>[a-f0-9]{40})\\s*#\\s*(?<currentValue>v\\d+\\.\\d+\\.\\d+)"
+      ],
+      "datasourceTemplate": "github-tags",
       "depNameTemplate": "zizmorcore/zizmor",
       "versioningTemplate": "semver"
     }

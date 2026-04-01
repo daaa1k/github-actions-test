@@ -17,9 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      ACTIONLINT_VERSION: v1.7.11
-      GHALINT_VERSION: v1.5.4
-      ZIZMOR_VERSION: v1.23.0
+      ACTIONLINT_COMMIT: 393031adb9afb225ee52ae2ccd7a5af5525e03e8 # v1.7.11
+      GHALINT_COMMIT: f1d383e6e26e3efc3fd9655781796624c739c040 # v1.5.4
+      ZIZMOR_COMMIT: f5c05f064bbd0f6b2c58887152c1039ecb94acbb # v1.23.0
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -35,25 +35,51 @@ jobs:
           mkdir -p "${bin_dir}"
           cd "${bin_dir}"
 
-          al_ver="${ACTIONLINT_VERSION#v}"
-          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/${ACTIONLINT_VERSION}/actionlint_${al_ver}_checksums.txt"
-          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/${ACTIONLINT_VERSION}/actionlint_${al_ver}_linux_amd64.tar.gz"
+          resolve_tag() {
+            local owner="$1" repo="$2" want="$3"
+            want="$(printf '%s' "$want" | tr '[:upper:]' '[:lower:]')"
+            local page=1
+            while [ "$page" -le 100 ]; do
+              local json
+              json=$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+                "https://api.github.com/repos/${owner}/${repo}/tags?per_page=100&page=${page}")
+              local count
+              count=$(echo "$json" | jq 'length')
+              [ "$count" -eq 0 ] && break
+              local tag
+              tag=$(echo "$json" | jq -r --arg sha "$want" '.[] | select((.commit.sha | ascii_downcase) == $sha) | .name' | head -1)
+              if [ -n "$tag" ] && [ "$tag" != "null" ]; then
+                printf '%s' "$tag"
+                return 0
+              fi
+              page=$((page+1))
+            done
+            echo "No tag found for commit ${want} in ${owner}/${repo}" >&2
+            return 1
+          }
+
+          al_tag="$(resolve_tag rhysd actionlint "${ACTIONLINT_COMMIT}")"
+          al_ver="${al_tag#v}"
+          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/${al_tag}/actionlint_${al_ver}_checksums.txt"
+          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/${al_tag}/actionlint_${al_ver}_linux_amd64.tar.gz"
           grep -E "actionlint_${al_ver}_linux_amd64\\.tar\\.gz\$" "actionlint_${al_ver}_checksums.txt" | sha256sum -c -
           tar -xzf "actionlint_${al_ver}_linux_amd64.tar.gz" actionlint
 
-          gh_ver="${GHALINT_VERSION#v}"
-          curl -sSLO "https://github.com/suzuki-shunsuke/ghalint/releases/download/${GHALINT_VERSION}/ghalint_${gh_ver}_checksums.txt"
-          curl -sSLO "https://github.com/suzuki-shunsuke/ghalint/releases/download/${GHALINT_VERSION}/ghalint_${gh_ver}_linux_amd64.tar.gz"
+          gh_tag="$(resolve_tag suzuki-shunsuke ghalint "${GHALINT_COMMIT}")"
+          gh_ver="${gh_tag#v}"
+          curl -sSLO "https://github.com/suzuki-shunsuke/ghalint/releases/download/${gh_tag}/ghalint_${gh_ver}_checksums.txt"
+          curl -sSLO "https://github.com/suzuki-shunsuke/ghalint/releases/download/${gh_tag}/ghalint_${gh_ver}_linux_amd64.tar.gz"
           grep -E "ghalint_${gh_ver}_linux_amd64\\.tar\\.gz\$" "ghalint_${gh_ver}_checksums.txt" | sha256sum -c -
           tar -xzf "ghalint_${gh_ver}_linux_amd64.tar.gz" ghalint
 
+          zizmor_tag="$(resolve_tag zizmorcore zizmor "${ZIZMOR_COMMIT}")"
           zizmor_asset="zizmor-x86_64-unknown-linux-gnu.tar.gz"
-          curl -sSLO "https://github.com/zizmorcore/zizmor/releases/download/${ZIZMOR_VERSION}/${zizmor_asset}"
+          curl -sSLO "https://github.com/zizmorcore/zizmor/releases/download/${zizmor_tag}/${zizmor_asset}"
           digest="$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/${ZIZMOR_VERSION}" \
+            "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/${zizmor_tag}" \
             | jq -r --arg name "${zizmor_asset}" '.assets[] | select(.name == $name) | .digest')"
           if [ -z "${digest}" ] || [ "${digest}" = "null" ]; then
-            echo "Could not resolve digest for ${zizmor_asset} at ${ZIZMOR_VERSION}" >&2
+            echo "Could not resolve digest for ${zizmor_asset} at ${zizmor_tag}" >&2
             exit 1
           fi
           digest_hex="${digest#sha256:}"
