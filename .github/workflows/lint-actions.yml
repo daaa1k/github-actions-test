@@ -9,6 +9,10 @@ on:
       - ".github/workflows/**"
   workflow_dispatch:
 
+concurrency:
+  group: lint-actions-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -16,6 +20,9 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    defaults:
+      run:
+        shell: bash
     env:
       ACTIONLINT_COMMIT: 393031adb9afb225ee52ae2ccd7a5af5525e03e8 # v1.7.11
       GHALINT_COMMIT: f1d383e6e26e3efc3fd9655781796624c739c040 # v1.5.4
@@ -26,7 +33,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install tools (curl + checksum verify) and run linters
+      - name: Install linters
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -47,12 +54,13 @@ jobs:
               count=$(echo "$json" | jq 'length')
               [ "$count" -eq 0 ] && break
               local tag
-              tag=$(echo "$json" | jq -r --arg sha "$want" '.[] | select((.commit.sha | ascii_downcase) == $sha) | .name' | head -1)
+              tag=$(echo "$json" | jq -r --arg sha "$want" \
+                '.[] | select((.commit.sha | ascii_downcase) == $sha) | .name' | head -1)
               if [ -n "$tag" ] && [ "$tag" != "null" ]; then
                 printf '%s' "$tag"
                 return 0
               fi
-              page=$((page+1))
+              page=$((page + 1))
             done
             echo "No tag found for commit ${want} in ${owner}/${repo}" >&2
             return 1
@@ -94,9 +102,12 @@ jobs:
           install_checksums_tarball suzuki-shunsuke ghalint "${GHALINT_COMMIT}" ghalint
           install_zizmor "${ZIZMOR_COMMIT}"
 
-          export PATH="${bin_dir}:${PATH}"
-          cd "${GITHUB_WORKSPACE}"
+          echo "${bin_dir}" >> "${GITHUB_PATH}"
 
+      - name: Run linters
+        run: |
+          set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
           actionlint
           ghalint run
-          zizmor --offline .github/workflows
+          zizmor .
