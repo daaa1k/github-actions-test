@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 15
     env:
       ACTIONLINT_VERSION: v1.7.11
-      GHALINT_VERSION: v1.5.4
+      GHALINT_VERSION: v1.5.5
       ZIZMOR_VERSION: v1.23.0
     steps:
       - name: Checkout
