@@ -1,0 +1,20 @@
+[tools]
+actionlint = "latest"
+ghalint = "latest"
+zizmor = "latest"
+
+[tasks.renovate-check]
+run = "npx --yes --package renovate -- renovate-config-validator renovate.json"
+description = "Validate renovate.json"
+
+[tasks.pinact-update]
+run = "pinact run -u -m 5"
+description = "Update github actions' pinned dependencies (with minReleaseAge 5 days)"
+
+[tasks.github-actions-lint]
+run = [
+  "actionlint",
+  "ghalint run",
+  "zizmor .",
+]
+description = "Run github actions lint"

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Pin actionlint release used by curl install in lint-actions workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/lint-actions\\.ya?ml$/"],
+      "matchStrings": ["ACTIONLINT_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "rhysd/actionlint",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Pin ghalint release used by curl install in lint-actions workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/lint-actions\\.ya?ml$/"],
+      "matchStrings": ["GHALINT_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "suzuki-shunsuke/ghalint",
+      "versioningTemplate": "semver"
+    },
+    {
+      "customType": "regex",
+      "description": "Pin zizmor release used by curl install in lint-actions workflow",
+      "managerFilePatterns": ["/^\\.github/workflows/lint-actions\\.ya?ml$/"],
+      "matchStrings": ["ZIZMOR_VERSION: (?<currentValue>v\\d+\\.\\d+\\.\\d+)"],
+      "datasourceTemplate": "github-releases",
+      "depNameTemplate": "zizmorcore/zizmor",
+      "versioningTemplate": "semver"
+    }
+  ]
+}
