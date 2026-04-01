@@ -58,34 +58,41 @@ jobs:
             return 1
           }
 
-          al_tag="$(resolve_tag rhysd actionlint "${ACTIONLINT_COMMIT}")"
-          al_ver="${al_tag#v}"
-          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/${al_tag}/actionlint_${al_ver}_checksums.txt"
-          curl -sSLO "https://github.com/rhysd/actionlint/releases/download/${al_tag}/actionlint_${al_ver}_linux_amd64.tar.gz"
-          grep -E "actionlint_${al_ver}_linux_amd64\\.tar\\.gz\$" "actionlint_${al_ver}_checksums.txt" | sha256sum -c -
-          tar -xzf "actionlint_${al_ver}_linux_amd64.tar.gz" actionlint
+          install_checksums_tarball() {
+            local owner="$1" repo="$2" commit="$3" bin_name="$4"
+            local tag ver checksums tarball base
+            tag="$(resolve_tag "$owner" "$repo" "$commit")"
+            ver="${tag#v}"
+            checksums="${bin_name}_${ver}_checksums.txt"
+            tarball="${bin_name}_${ver}_linux_amd64.tar.gz"
+            base="https://github.com/${owner}/${repo}/releases/download/${tag}"
+            curl -sSLO "${base}/${checksums}"
+            curl -sSLO "${base}/${tarball}"
+            grep -E "${tarball}\$" "$checksums" | sha256sum -c -
+            tar -xzf "$tarball" "$bin_name"
+          }
 
-          gh_tag="$(resolve_tag suzuki-shunsuke ghalint "${GHALINT_COMMIT}")"
-          gh_ver="${gh_tag#v}"
-          curl -sSLO "https://github.com/suzuki-shunsuke/ghalint/releases/download/${gh_tag}/ghalint_${gh_ver}_checksums.txt"
-          curl -sSLO "https://github.com/suzuki-shunsuke/ghalint/releases/download/${gh_tag}/ghalint_${gh_ver}_linux_amd64.tar.gz"
-          grep -E "ghalint_${gh_ver}_linux_amd64\\.tar\\.gz\$" "ghalint_${gh_ver}_checksums.txt" | sha256sum -c -
-          tar -xzf "ghalint_${gh_ver}_linux_amd64.tar.gz" ghalint
+          install_zizmor() {
+            local owner="zizmorcore" repo="zizmor" asset="zizmor-x86_64-unknown-linux-gnu.tar.gz"
+            local tag digest digest_hex
+            tag="$(resolve_tag "$owner" "$repo" "$1")"
+            curl -sSLO "https://github.com/${owner}/${repo}/releases/download/${tag}/${asset}"
+            digest=$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+              "https://api.github.com/repos/${owner}/${repo}/releases/tags/${tag}" \
+              | jq -r --arg name "$asset" '.assets[] | select(.name == $name) | .digest')
+            if [ -z "${digest}" ] || [ "${digest}" = "null" ]; then
+              echo "Could not resolve digest for ${asset} at ${tag}" >&2
+              exit 1
+            fi
+            digest_hex="${digest#sha256:}"
+            echo "${digest_hex}  ${asset}" | sha256sum -c -
+            tar -xzf "${asset}"
+            chmod +x zizmor
+          }
 
-          zizmor_tag="$(resolve_tag zizmorcore zizmor "${ZIZMOR_COMMIT}")"
-          zizmor_asset="zizmor-x86_64-unknown-linux-gnu.tar.gz"
-          curl -sSLO "https://github.com/zizmorcore/zizmor/releases/download/${zizmor_tag}/${zizmor_asset}"
-          digest="$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
-            "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/${zizmor_tag}" \
-            | jq -r --arg name "${zizmor_asset}" '.assets[] | select(.name == $name) | .digest')"
-          if [ -z "${digest}" ] || [ "${digest}" = "null" ]; then
-            echo "Could not resolve digest for ${zizmor_asset} at ${zizmor_tag}" >&2
-            exit 1
-          fi
-          digest_hex="${digest#sha256:}"
-          echo "${digest_hex}  ${zizmor_asset}" | sha256sum -c -
-          tar -xzf "${zizmor_asset}"
-          chmod +x zizmor
+          install_checksums_tarball rhysd actionlint "${ACTIONLINT_COMMIT}" actionlint
+          install_checksums_tarball suzuki-shunsuke ghalint "${GHALINT_COMMIT}" ghalint
+          install_zizmor "${ZIZMOR_COMMIT}"
 
           export PATH="${bin_dir}:${PATH}"
           cd "${GITHUB_WORKSPACE}"
