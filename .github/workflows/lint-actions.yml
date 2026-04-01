@@ -27,6 +27,8 @@ jobs:
           persist-credentials: false
 
       - name: Install tools (curl + checksum verify) and run linters
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           bin_dir="${RUNNER_TEMP}/gha-linters"
@@ -47,7 +49,7 @@ jobs:
 
           zizmor_asset="zizmor-x86_64-unknown-linux-gnu.tar.gz"
           curl -sSLO "https://github.com/zizmorcore/zizmor/releases/download/${ZIZMOR_VERSION}/${zizmor_asset}"
-          digest="$(curl -sS \
+          digest="$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
             "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/${ZIZMOR_VERSION}" \
             | jq -r --arg name "${zizmor_asset}" '.assets[] | select(.name == $name) | .digest')"
           if [ -z "${digest}" ] || [ "${digest}" = "null" ]; then
