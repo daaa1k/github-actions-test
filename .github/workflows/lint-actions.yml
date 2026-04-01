@@ -25,8 +25,8 @@ jobs:
         shell: bash
     env:
       ACTIONLINT_COMMIT: 393031adb9afb225ee52ae2ccd7a5af5525e03e8 # v1.7.11
-      GHALINT_COMMIT: f1d383e6e26e3efc3fd9655781796624c739c040 # v1.5.4
-      ZIZMOR_COMMIT: f5c05f064bbd0f6b2c58887152c1039ecb94acbb # v1.23.0
+      GHALINT_COMMIT: 99b0e63be7fbd4c30c6d0b3da5b4a94a19ad55e6 # v1.5.5
+      ZIZMOR_COMMIT: 0b77258cf93d4e0ae762c843422c333faf2793f6 # v1.23.1
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
