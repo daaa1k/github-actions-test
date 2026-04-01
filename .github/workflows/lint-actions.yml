@@ -47,7 +47,12 @@ jobs:
 
           zizmor_asset="zizmor-x86_64-unknown-linux-gnu.tar.gz"
           curl -sSLO "https://github.com/zizmorcore/zizmor/releases/download/${ZIZMOR_VERSION}/${zizmor_asset}"
-          digest="$(curl -sS -H "Authorization: Bearer ${GITHUB_TOKEN}" \
+          # With `set -u`, only add Authorization when GITHUB_TOKEN is set (public API works without it).
+          api_curl=(curl -sS)
+          if [ -n "${GITHUB_TOKEN:-}" ]; then
+            api_curl+=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
+          fi
+          digest="$("${api_curl[@]}" \
             "https://api.github.com/repos/zizmorcore/zizmor/releases/tags/${ZIZMOR_VERSION}" \
             | jq -r --arg name "${zizmor_asset}" '.assets[] | select(.name == $name) | .digest')"
           if [ -z "${digest}" ] || [ "${digest}" = "null" ]; then
