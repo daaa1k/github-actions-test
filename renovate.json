@@ -1,6 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "packageRules": [
+    {
+      "description": "Group GitHub Actions lint tool updates (regex custom managers) into one PR",
+      "groupName": "lint tools",
+      "matchPackageNames": ["rhysd/actionlint", "suzuki-shunsuke/ghalint", "zizmorcore/zizmor"]
+    }
+  ],
   "customManagers": [
     {
       "customType": "regex",
