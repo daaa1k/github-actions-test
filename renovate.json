@@ -1,6 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", "helpers:pinGitHubActionDigests"],
+  "minimumReleaseAge": "5 days",
   "packageRules": [
     {
       "description": "Group GitHub Actions lint tool updates (regex custom managers) into one PR",
