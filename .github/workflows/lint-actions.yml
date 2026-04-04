@@ -24,7 +24,7 @@ jobs:
       run:
         shell: bash
     env:
-      ACTIONLINT_COMMIT: 393031adb9afb225ee52ae2ccd7a5af5525e03e8 # v1.7.11
+      ACTIONLINT_COMMIT: 914e7df21a07ef503a81201c76d2b11c789d3fca # v1.7.12
       GHALINT_COMMIT: 99b0e63be7fbd4c30c6d0b3da5b4a94a19ad55e6 # v1.5.5
       ZIZMOR_COMMIT: 0b77258cf93d4e0ae762c843422c333faf2793f6 # v1.23.1
     steps:
